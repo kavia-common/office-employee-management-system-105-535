@@ -4,9 +4,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'My Express API',
+      title: 'Office & Employee Management API',
       version: '1.0.0',
-      description: 'A simple Express API documented with Swagger',
+      description: 'Express API for CRUD operations on offices and employees',
     }
   },
   apis: ['./src/routes/*.js'], // Path to the API docs

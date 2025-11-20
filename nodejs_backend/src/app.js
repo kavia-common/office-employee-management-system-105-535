@@ -3,19 +3,26 @@ const express = require('express');
 const routes = require('./routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../swagger');
+const employeesRoutes = require('./routes/employees');
+const officesRoutes = require('./routes/offices');
+const { initSchema } = require('./db/pool');
 
 // Initialize express app
 const app = express();
 
+// CORS: allow React frontend on localhost:3000
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.set('trust proxy', true);
+
+// Swagger UI with dynamic server url
 app.use('/docs', swaggerUi.serve, (req, res, next) => {
   const host = req.get('host');           // may or may not include port
-  let protocol = req.protocol;          // http or https
+  let protocol = req.protocol;            // http or https
 
   const actualPort = req.socket.localPort;
   const hasPort = host.includes(':');
@@ -41,8 +48,18 @@ app.use('/docs', swaggerUi.serve, (req, res, next) => {
 // Parse JSON request body
 app.use(express.json());
 
-// Mount routes
+// Health route remains at root
 app.use('/', routes);
+
+// Entity routes
+app.use('/offices', officesRoutes);
+app.use('/employees', employeesRoutes);
+
+// Initialize DB schema at startup (non-blocking)
+initSchema().catch((e) => {
+  // Log but do not crash; server can still start and report DB issues per request
+  console.error('Schema init error:', e);
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
